@@ -1,17 +1,37 @@
+// ==================== config/queue.js ====================
 const Queue = require('bull');
 const Redis = require('redis');
 
-// Parse Redis URL for Bull (it needs host, port, password separately)
+// Parse Redis URL
 const redisUrl = new URL(process.env.REDIS_URL);
 
+// Extract auth details
+const username = redisUrl.username || 'default';
+const password = redisUrl.password;
+const host = redisUrl.hostname;
+const port = redisUrl.port || 6379;
+const isSecure = redisUrl.protocol === 'rediss:';
+
+console.log('Connecting to Redis/Valkey:', {
+  host,
+  port,
+  isSecure,
+  hasPassword: !!password
+});
+
+// Bull queue configuration for Valkey/Redis
 const redisConfig = {
   redis: {
-    host: redisUrl.hostname,
-    port: redisUrl.port || 6379,
-    password: redisUrl.password,
-    tls: redisUrl.protocol === 'rediss:' ? {} : undefined,
+    host: host,
+    port: port,
+    password: password,
+    username: username, // Valkey uses username
+    tls: isSecure ? {
+      rejectUnauthorized: false
+    } : undefined,
     maxRetriesPerRequest: null,
-    enableReadyCheck: false
+    enableReadyCheck: false,
+    connectTimeout: 10000
   }
 };
 
@@ -19,19 +39,22 @@ const redisConfig = {
 const notificationQueue = new Queue('notifications', redisConfig);
 
 notificationQueue.on('ready', () => {
-  console.log('✅ Bull queue connected to Redis');
+  console.log('✅ Bull queue connected to Redis/Valkey');
 });
 
 notificationQueue.on('error', (error) => {
-  console.error('❌ Bull queue error:', error);
+  console.error('❌ Bull queue error:', error.message);
 });
 
 // Create Redis client for direct operations (optional)
 const redisClient = Redis.createClient({
   url: process.env.REDIS_URL,
+  username: username,
+  password: password,
   socket: {
-    tls: process.env.REDIS_URL.startsWith('rediss://'),
-    rejectUnauthorized: false
+    tls: isSecure,
+    rejectUnauthorized: false,
+    connectTimeout: 10000
   }
 });
 
@@ -40,10 +63,13 @@ redisClient.on('connect', () => {
 });
 
 redisClient.on('error', (err) => {
-  console.error('❌ Redis client error:', err);
+  console.error('❌ Redis client error:', err.message);
 });
 
-redisClient.connect().catch(console.error);
+// Connect the Redis client
+redisClient.connect().catch(err => {
+  console.error('Failed to connect Redis client:', err.message);
+});
 
 module.exports = {
   notificationQueue,

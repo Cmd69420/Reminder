@@ -106,17 +106,22 @@ async function pollReminders() {
           new Date()
         );
         
+        // Convert nextReminderDate to string or null explicitly
+        const nextDateValue = nextReminderDate ? nextReminderDate.toISOString().split('T')[0] : null;
+        
+        // Determine new status
+        const newStatus = nextDateValue === null ? 'completed' : 'active';
+        
         await pool.query(
           `UPDATE reminders 
            SET last_checked_at = CURRENT_TIMESTAMP, 
-               next_reminder_date = $1,
-               status = CASE 
-                 WHEN $1 IS NULL THEN 'completed'
-                 ELSE status
-               END
-           WHERE id = $2`,
-          [nextReminderDate, reminder.id]
+               next_reminder_date = $1::date,
+               status = $2::varchar
+           WHERE id = $3`,
+          [nextDateValue, newStatus, reminder.id]
         );
+        
+        logger.info(`Updated reminder ${reminder.id}: next_date=${nextDateValue}, status=${newStatus}`);
         
       } catch (error) {
         logger.error(`Error processing reminder ${reminder.id}:`, error);

@@ -1,3 +1,4 @@
+// ==================== config/env.js ====================
 require('dotenv').config();
 
 const requiredEnvVars = [
@@ -21,11 +22,17 @@ module.exports = {
   REDIS_URL: process.env.REDIS_URL,
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
-  SENDGRID_API_KEY: process.env.SENDGRID_API_KEY || '',
-  SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL || 'noreply@example.com',
-  SENDGRID_FROM_NAME: process.env.SENDGRID_FROM_NAME || 'Reminder System',
+  
+  // Brevo Email Configuration (formerly Sendinblue)
+  BREVO_API_KEY: process.env.BREVO_API_KEY || '',
+  BREVO_FROM_EMAIL: process.env.BREVO_FROM_EMAIL || 'noreply@example.com',
+  BREVO_FROM_NAME: process.env.BREVO_FROM_NAME || 'Reminder System',
+  
+  // Twilio WhatsApp Configuration
   TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID || '',
   TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN || '',
   TWILIO_WHATSAPP_FROM: process.env.TWILIO_WHATSAPP_FROM || '',
+  
+  // Scheduler Configuration
   SCHEDULER_INTERVAL: parseInt(process.env.SCHEDULER_INTERVAL || '60000', 10)
 };
