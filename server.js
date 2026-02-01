@@ -10,6 +10,7 @@ const authRoutes = require('./routes/auth.routes');
 const clientRoutes = require('./routes/client.routes');
 const reminderRoutes = require('./routes/reminder.routes');
 const logRoutes = require('./routes/log.routes');
+const whatsappRoutes = require('./routes/whatsapp.routes');
 
 // Initialize Express app
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/logs', logRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // 404 handler
 app.use(notFoundHandler);
